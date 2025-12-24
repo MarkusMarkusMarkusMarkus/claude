@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import rumps
 from datetime import datetime, timedelta
+from astral import LocationInfo
+from astral.sun import sun
 
 class ProgressBarApp(rumps.App):
     def __init__(self):
@@ -10,23 +12,31 @@ class ProgressBarApp(rumps.App):
         self.display_mode = "year"
         self.pending = None
 
-        self.menu = ["Day", "Wk", "Mth", "Year", "Life", None, "Quit"]
+        # Set your location for daylight calculation
+        # Default: San Francisco. Change to your city!
+        self.location = LocationInfo("San Francisco", "USA", "America/Los_Angeles", 37.77, -122.41)
+
+        self.menu = ["Work", "Useful", "Daylight", "Month", "Year", "Life", None, "Quit"]
 
         self.timer = rumps.Timer(self.on_tick, 1)
         self.timer.start()
         self.on_tick(None)
 
-    @rumps.clicked("Day")
-    def day_clicked(self, _):
-        self.pending = "day"
+    @rumps.clicked("Work")
+    def work_clicked(self, _):
+        self.pending = "work"
 
-    @rumps.clicked("Wk")
-    def wk_clicked(self, _):
-        self.pending = "wk"
+    @rumps.clicked("Useful")
+    def useful_clicked(self, _):
+        self.pending = "useful"
 
-    @rumps.clicked("Mth")
-    def mth_clicked(self, _):
-        self.pending = "mth"
+    @rumps.clicked("Daylight")
+    def daylight_clicked(self, _):
+        self.pending = "daylight"
+
+    @rumps.clicked("Month")
+    def month_clicked(self, _):
+        self.pending = "month"
 
     @rumps.clicked("Year")
     def year_clicked(self, _):
@@ -52,45 +62,74 @@ class ProgressBarApp(rumps.App):
 
         now = datetime.now()
 
-        # Day: 8am to 6pm (10 hours)
-        day_start = datetime(now.year, now.month, now.day, 8, 0)
-        day_end = datetime(now.year, now.month, now.day, 18, 0)
-        if now < day_start:
-            d = 1
-        elif now > day_end:
-            d = 99
+        # Work day: 8am to 1pm (5 hours)
+        work_start = datetime(now.year, now.month, now.day, 8, 0)
+        work_end = datetime(now.year, now.month, now.day, 13, 0)
+        if now < work_start:
+            work = 1
+        elif now > work_end:
+            work = 99
         else:
-            d = max(1, min(99, ((now - day_start).total_seconds() / (10 * 3600)) * 100))
+            work = max(1, min(99, ((now - work_start).total_seconds() / (5 * 3600)) * 100))
 
-        # Week
-        week_start = datetime(now.year, now.month, now.day) - timedelta(days=now.weekday())
-        w = max(1, min(99, ((now - week_start).total_seconds() / (7 * 86400)) * 100))
+        # Useful day: 8am to 8pm (12 hours)
+        useful_start = datetime(now.year, now.month, now.day, 8, 0)
+        useful_end = datetime(now.year, now.month, now.day, 20, 0)
+        if now < useful_start:
+            useful = 1
+        elif now > useful_end:
+            useful = 99
+        else:
+            useful = max(1, min(99, ((now - useful_start).total_seconds() / (12 * 3600)) * 100))
 
-        # Mth
+        # Daylight: sunrise to sunset (based on location)
+        try:
+            s = sun(self.location.observer, date=now.date())
+            sunrise = s['sunrise'].replace(tzinfo=None)
+            sunset = s['sunset'].replace(tzinfo=None)
+            if now < sunrise:
+                daylight = 1
+            elif now > sunset:
+                daylight = 99
+            else:
+                daylight = max(1, min(99, ((now - sunrise).total_seconds() / (sunset - sunrise).total_seconds()) * 100))
+        except:
+            # Fallback if astral fails
+            daylight = 50
+
+        # Month
         month_start = datetime(now.year, now.month, 1)
         if now.month == 12:
             month_end = datetime(now.year + 1, 1, 1)
         else:
             month_end = datetime(now.year, now.month + 1, 1)
-        m = max(1, min(99, ((now - month_start).total_seconds() / (month_end - month_start).total_seconds()) * 100))
+        month = max(1, min(99, ((now - month_start).total_seconds() / (month_end - month_start).total_seconds()) * 100))
 
         # Year
         year_start = datetime(now.year, 1, 1)
         year_end = datetime(now.year + 1, 1, 1)
-        y = max(1, min(99, ((now - year_start).total_seconds() / (year_end - year_start).total_seconds()) * 100))
+        year = max(1, min(99, ((now - year_start).total_seconds() / (year_end - year_start).total_seconds()) * 100))
 
         # Life
         birth = datetime(self.birth_year, 1, 1)
         life_span = self.life_expectancy * 365.25 * 86400
-        l = max(1, min(99, ((now - birth).total_seconds() / life_span) * 100))
+        life = max(1, min(99, ((now - birth).total_seconds() / life_span) * 100))
 
-        self.menu["Day"].title = self.bar(d) + " Day: " + str(int(d)) + "%"
-        self.menu["Wk"].title = self.bar(w) + " Wk: " + str(int(w)) + "%"
-        self.menu["Mth"].title = self.bar(m) + " Mth: " + str(int(m)) + "%"
-        self.menu["Year"].title = self.bar(y) + " Year: " + str(int(y)) + "%"
-        self.menu["Life"].title = self.bar(l) + " Life: " + str(int(l)) + "%"
+        self.menu["Work"].title = self.bar(work) + " Work: " + str(int(work)) + "%"
+        self.menu["Useful"].title = self.bar(useful) + " Useful: " + str(int(useful)) + "%"
+        self.menu["Daylight"].title = self.bar(daylight) + " Daylight: " + str(int(daylight)) + "%"
+        self.menu["Month"].title = self.bar(month) + " Month: " + str(int(month)) + "%"
+        self.menu["Year"].title = self.bar(year) + " Year: " + str(int(year)) + "%"
+        self.menu["Life"].title = self.bar(life) + " Life: " + str(int(life)) + "%"
 
-        vals = {"day": (d, "Day"), "wk": (w, "Wk"), "mth": (m, "Mth"), "year": (y, "Year"), "life": (l, "Life")}
+        vals = {
+            "work": (work, "Work"),
+            "useful": (useful, "Useful"),
+            "daylight": (daylight, "Day"),
+            "month": (month, "Month"),
+            "year": (year, "Year"),
+            "life": (life, "Life")
+        }
         pct, lbl = vals[self.display_mode]
         self.title = self.bar(pct) + " " + lbl + ": " + str(int(pct)) + "%"
 
