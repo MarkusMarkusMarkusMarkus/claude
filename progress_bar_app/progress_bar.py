@@ -16,7 +16,7 @@ class ProgressBarApp(rumps.App):
         # Default: San Francisco. Change to your city!
         self.location = LocationInfo("San Francisco", "USA", "America/Los_Angeles", 37.77, -122.41)
 
-        self.menu = ["Work", "Useful", "Daylight", "Month", "Year", "Life", None, "Quit"]
+        self.menu = ["Work", "Useful", "Daylight", "Week", "Month", "Year", "Life", None, "Quit"]
 
         self.timer = rumps.Timer(self.on_tick, 1)
         self.timer.start()
@@ -33,6 +33,10 @@ class ProgressBarApp(rumps.App):
     @rumps.clicked("Daylight")
     def daylight_clicked(self, _):
         self.pending = "daylight"
+
+    @rumps.clicked("Week")
+    def week_clicked(self, _):
+        self.pending = "week"
 
     @rumps.clicked("Month")
     def month_clicked(self, _):
@@ -97,6 +101,10 @@ class ProgressBarApp(rumps.App):
             # Fallback if astral fails
             daylight = 50
 
+        # Week
+        week_start = datetime(now.year, now.month, now.day) - timedelta(days=now.weekday())
+        week = max(1, min(99, ((now - week_start).total_seconds() / (7 * 86400)) * 100))
+
         # Month
         month_start = datetime(now.year, now.month, 1)
         if now.month == 12:
@@ -118,6 +126,7 @@ class ProgressBarApp(rumps.App):
         self.menu["Work"].title = self.bar(work) + " Work: " + str(int(work)) + "%"
         self.menu["Useful"].title = self.bar(useful) + " Useful: " + str(int(useful)) + "%"
         self.menu["Daylight"].title = self.bar(daylight) + " Daylight: " + str(int(daylight)) + "%"
+        self.menu["Week"].title = self.bar(week) + " Week: " + str(int(week)) + "%"
         self.menu["Month"].title = self.bar(month) + " Month: " + str(int(month)) + "%"
         self.menu["Year"].title = self.bar(year) + " Year: " + str(int(year)) + "%"
         self.menu["Life"].title = self.bar(life) + " Life: " + str(int(life)) + "%"
@@ -126,6 +135,7 @@ class ProgressBarApp(rumps.App):
             "work": (work, "Work"),
             "useful": (useful, "Useful"),
             "daylight": (daylight, "Day"),
+            "week": (week, "Week"),
             "month": (month, "Month"),
             "year": (year, "Year"),
             "life": (life, "Life")

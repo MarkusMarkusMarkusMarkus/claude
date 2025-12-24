@@ -7,6 +7,7 @@ A macOS menu bar application that displays progress bars for different time peri
 - **Work**: Shows progress from 8am to 1pm (5-hour work period)
 - **Useful**: Shows progress from 8am to 8pm (12-hour useful day)
 - **Daylight**: Shows progress from sunrise to sunset (location-based)
+- **Week**: Shows progress through the current week
 - **Month**: Shows progress through the current month
 - **Year**: Shows progress through the current year
 - **Life**: Shows progress based on birth year (1988) and life expectancy (80 years)
