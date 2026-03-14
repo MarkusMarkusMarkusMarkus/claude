@@ -20,7 +20,6 @@ class ProgressBarApp(rumps.App):
 
         self.timer = rumps.Timer(self.on_tick, 1)
         self.timer.start()
-        self.on_tick(None)
 
     @rumps.clicked("Work")
     def work_clicked(self, _):

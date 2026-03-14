@@ -28,7 +28,7 @@ A macOS menu bar application that displays progress bars for different time peri
 
 2. **Install required libraries**:
    ```bash
-   pip3 install rumps astral
+   pip3 install -r requirements.txt
    ```
 
 3. **Configure your location** (optional):
