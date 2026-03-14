@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>~ART~ | Markus</title>
+  <style>
+    :root {
+      --bg: #0e0e0e;
+      --fg: #e8e8e0;
+      --accent: #c8a96e;
+      --muted: #888;
+      --border: #2a2a2a;
+      --section-bg: #141414;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Georgia', serif;
+      line-height: 1.7;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    h1.site-title {
+      font-size: 2.4rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    .tagline {
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.95rem;
+      margin-bottom: 3rem;
+    }
+
+    nav.toc {
+      border: 1px solid var(--border);
+      background: var(--section-bg);
+      padding: 1.2rem 1.5rem;
+      border-radius: 4px;
+      margin-bottom: 3.5rem;
+    }
+
+    nav.toc h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    nav.toc ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1.5rem;
+    }
+
+    nav.toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    nav.toc a:hover {
+      text-decoration: underline;
+    }
+
+    section {
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    h2.section-title {
+      font-size: 1.9rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h3.sub-title {
+      font-size: 1.2rem;
+      color: var(--fg);
+      margin: 1.8rem 0 0.6rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #ccc8c0;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .era-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .era-card {
+      background: var(--section-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem 1.1rem;
+    }
+
+    .era-card .era-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.3rem;
+    }
+
+    .era-card .era-tool {
+      font-size: 1rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .era-card .era-desc {
+      font-size: 0.88rem;
+      color: #999;
+      margin-top: 0.3rem;
+    }
+
+    .placeholder {
+      background: var(--section-bg);
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      padding: 1.2rem 1.5rem;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.9rem;
+      text-align: center;
+      margin: 0.8rem 0;
+    }
+
+    .influences-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.5rem 0 1rem;
+    }
+
+    .influences-list li {
+      background: var(--section-bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.88rem;
+      color: #ccc;
+    }
+
+    .tbd-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: #2a2010;
+      color: var(--accent);
+      border: 1px solid #4a3820;
+      border-radius: 2px;
+      padding: 0.1rem 0.45rem;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .coming-soon {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="site-title">~ART~</h1>
+  <p class="tagline">My soul's getting malnourished from not working in the arts enough.</p>
+
+  <nav class="toc">
+    <h2>Sections</h2>
+    <ul>
+      <li><a href="#comics">/COMICS</a></li>
+      <li><a href="#hand-crafted">/HAND-CRAFTED</a></li>
+      <li><a href="#dreams">/DREAMS</a></li>
+      <li><a href="#psychology">/PSYCHOLOGY</a></li>
+      <li><a href="#drugs">/DRUGS</a></li>
+    </ul>
+  </nav>
+
+  <!-- ─────────────────── COMICS ─────────────────── -->
+  <section id="comics">
+    <div class="section-label">/ART</div>
+    <h2 class="section-title">Comics</h2>
+
+    <h3 class="sub-title">As a Kid</h3>
+    <p>
+      I loved comics from early on. I made my own fan comics — Pokemon, Calvin &amp; Hobbes.
+      As I got older I got into folklore, Mike Mignola, and Magic: The Gathering.
+    </p>
+
+    <p><strong>Influences:</strong></p>
+    <ul class="influences-list">
+      <li>Calvin &amp; Hobbes</li>
+      <li>Pokémon</li>
+      <li>Mike Mignola / Hellboy</li>
+      <li>Folklore</li>
+      <li>MTG</li>
+      <li>Saga</li>
+    </ul>
+
+    <div class="placeholder">[ tbd: childhood fan comics — Calvin &amp; Hobbes, Pokémon ]</div>
+
+    <h3 class="sub-title">Learning to Draw</h3>
+    <p>
+      A few years ago I tried to learn how to draw using
+      <a href="https://www.drawright.com/" target="_blank"><em>Drawing on the Right Side of the Brain</em></a>.
+      It served me well.
+    </p>
+    <div class="placeholder">[ tbd: drawings &amp; paintings from that period ]</div>
+
+    <h3 class="sub-title">AI-Assisted Comics</h3>
+    <p>Thankfully, I'm not constrained by my (lack of) skill anymore.</p>
+
+    <div class="era-grid">
+      <div class="era-card">
+        <div class="era-date">2024</div>
+        <div class="era-tool">ChatGPT</div>
+        <div class="era-desc">First experiments with AI-generated comics</div>
+        <div class="placeholder" style="margin-top:0.7rem; padding:0.8rem;">[ image tbd ]</div>
+      </div>
+      <div class="era-card">
+        <div class="era-date">2025</div>
+        <div class="era-tool">ChatGPT</div>
+        <div class="era-desc">Continued exploration</div>
+        <div class="placeholder" style="margin-top:0.7rem; padding:0.8rem;">[ image tbd ]</div>
+      </div>
+      <div class="era-card">
+        <div class="era-date">Early 2026</div>
+        <div class="era-tool">Midjourney</div>
+        <div class="era-desc">Moodboards &amp; comic panels — in my Midjourney era</div>
+        <div class="placeholder" style="margin-top:0.7rem; padding:0.8rem;">[ images tbd ]</div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">Future</h3>
+    <p>
+      Space opera aesthetic — influenced by <em>Saga</em>.<br />
+      Idea: explainer comic of my ideas / philosophy.<br />
+      Idea: illustrate dreams &amp; psychology sessions with AI.
+    </p>
+  </section>
+
+  <!-- ─────────────────── HAND-CRAFTED ─────────────────── -->
+  <section id="hand-crafted">
+    <div class="section-label">/ART</div>
+    <h2 class="section-title">Hand-Crafted</h2>
+    <p class="coming-soon">Content coming soon — scavenging files from computer &amp; Google Drive.</p>
+    <div class="placeholder">[ tbd: hand-crafted works ]</div>
+  </section>
+
+  <!-- ─────────────────── DREAMS ─────────────────── -->
+  <section id="dreams">
+    <div class="section-label">/ART</div>
+    <h2 class="section-title">Dreams</h2>
+    <p>
+      Dreams as creative material — illustrated, documented, made into artifacts.
+      OBE: Midjourney makes my collection of images something.
+    </p>
+    <div class="placeholder">[ tbd: dream illustrations &amp; documentation ]</div>
+    <p>
+      Related: <em>dream questionnaire → ask twitter → edit survey page → publish paper</em>
+      <span class="tbd-badge">tbd</span>
+    </p>
+  </section>
+
+  <!-- ─────────────────── PSYCHOLOGY ─────────────────── -->
+  <section id="psychology">
+    <div class="section-label">/ART</div>
+    <h2 class="section-title">Psychology</h2>
+    <p>
+      Using Buddhism and Psychoanalysis to write fiction.<br />
+      Themes: defense, schizoid dynamics, connection, autonomy.
+    </p>
+    <p>
+      I want my suffering to become creative artifacts that help others —
+      the way tweets already have been, and language engineering, and psychological writing.
+    </p>
+    <div class="placeholder">[ tbd: psychology-inspired works ]</div>
+  </section>
+
+  <!-- ─────────────────── DRUGS ─────────────────── -->
+  <section id="drugs">
+    <div class="section-label">/ART</div>
+    <h2 class="section-title">Drugs</h2>
+    <p class="coming-soon">Content coming soon.</p>
+    <div class="placeholder">[ tbd ]</div>
+  </section>
+
+  <footer>
+    <p>Markus &mdash; All art, all the time.</p>
+  </footer>
+
+</body>
+</html>
