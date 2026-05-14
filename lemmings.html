@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lemmings — fr fr</title>
+<style>
+  :root {
+    --bg: #0f1116;
+    --panel: #1a1d26;
+    --ink: #e8ecf3;
+    --muted: #8a92a6;
+    --accent: #ffd23f;
+    --good: #4ade80;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+  }
+  .tag {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .tag a { color: var(--accent); text-decoration: none; }
+  .hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    background: var(--panel);
+    padding: 10px 12px;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #2a2f3d;
+  }
+  .stat {
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #242836;
+  }
+  .stat b { color: var(--accent); }
+  .stat.good b { color: var(--good); }
+  .stat.bad b { color: var(--bad); }
+  .spacer { flex: 1; }
+  button {
+    background: #2a2f3d;
+    color: var(--ink);
+    border: 1px solid #353b4d;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+  }
+  button:hover { background: #353b4d; }
+  button.active {
+    background: var(--accent);
+    color: #1a1d26;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .stage {
+    position: relative;
+    background: var(--panel);
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #11141c;
+    cursor: crosshair;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 17, 22, 0.78);
+    backdrop-filter: blur(4px);
+    text-align: center;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay-inner {
+    max-width: 460px;
+  }
+  .overlay h2 { margin: 0 0 6px; font-size: 22px; }
+  .overlay p { color: var(--muted); margin: 6px 0 16px; }
+  .lesson {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch {
+    width: 12px; height: 12px; border-radius: 3px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lemmings — fr fr</h1>
+  <div class="tag">a playable toy model after <a href="https://rivalvoices.substack.com/p/lemmings" target="_blank" rel="noopener">guy's "Lemmings"</a>. place signs. save the little guys. mind the cliff.</div>
+
+  <div class="hud">
+    <div class="stat good">saved <b id="saved">0</b></div>
+    <div class="stat bad">💀 <b id="dead">0</b></div>
+    <div class="stat">spawned <b id="spawned">0</b>/<b id="total">30</b></div>
+    <div class="spacer"></div>
+    <button id="tool-left">← Go Left</button>
+    <button id="tool-right">Go Right →</button>
+    <button id="tool-erase">Erase</button>
+    <button id="reset">Restart</button>
+    <button id="pause">Pause</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" width="940" height="560"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="overlay-inner">
+        <h2 id="ov-title">Round over</h2>
+        <p id="ov-body">…</p>
+        <button id="ov-again">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#4ade80"></span>portal (home)</span>
+    <span><span class="swatch" style="background:#f87171"></span>cliff (death)</span>
+    <span><span class="swatch" style="background:#ffd23f"></span>your sign</span>
+    <span>click canvas with a tool selected to place • signs override the lemming's heading</span>
+  </div>
+
+  <p class="lesson">
+    Default lemmings walk straight up and 80% of them yeet themselves off the cliff. "Go Left" saves the right half at the expense of the left. "Go Right" saves the left at the expense of the right. There is no single sign that saves them all — communicative precision is at odds with memetic success. Try it.
+  </p>
+</div>
+
+<script>
+(() => {
+  const cvs = document.getElementById('c');
+  const ctx = cvs.getContext('2d');
+  const W = cvs.width, H = cvs.height;
+
+  // World layout (top-down): lemmings spawn near bottom, walk "up" (north) toward portal.
+  // Top edge has a narrow portal gap in the middle; the rest of the top is CLIFF.
+  const PORTAL = { x: W / 2 - 36, w: 72 };           // portal opening on top edge
+  const SPAWN  = { y: H - 60, x0: W * 0.18, x1: W * 0.82 }; // spawn line near bottom
+  const CLIFF_Y = 40;                                 // y above which is "off the top"
+  const TOTAL = 30;
+  const SPAWN_EVERY = 22;                             // frames between spawns
+  const SPEED = 0.9;
+
+  const tools = { LEFT: 'left', RIGHT: 'right', ERASE: 'erase' };
+  let tool = null;
+  let paused = false;
+  let frame = 0;
+  let spawnedCount = 0;
+  let saved = 0;
+  let dead = 0;
+  let lemmings = [];
+  let signs = []; // { x, y, dir: 'left'|'right' }
+
+  const els = {
+    saved: document.getElementById('saved'),
+    dead: document.getElementById('dead'),
+    spawned: document.getElementById('spawned'),
+    total: document.getElementById('total'),
+    overlay: document.getElementById('overlay'),
+    ovTitle: document.getElementById('ov-title'),
+    ovBody: document.getElementById('ov-body'),
+  };
+  els.total.textContent = TOTAL;
+
+  function setTool(t) {
+    tool = (tool === t) ? null : t;
+    for (const id of ['tool-left','tool-right','tool-erase']) {
+      document.getElementById(id).classList.remove('active');
+    }
+    if (tool === tools.LEFT)  document.getElementById('tool-left').classList.add('active');
+    if (tool === tools.RIGHT) document.getElementById('tool-right').classList.add('active');
+    if (tool === tools.ERASE) document.getElementById('tool-erase').classList.add('active');
+    cvs.style.cursor = tool ? 'crosshair' : 'default';
+  }
+  document.getElementById('tool-left').onclick  = () => setTool(tools.LEFT);
+  document.getElementById('tool-right').onclick = () => setTool(tools.RIGHT);
+  document.getElementById('tool-erase').onclick = () => setTool(tools.ERASE);
+  document.getElementById('reset').onclick = reset;
+  document.getElementById('pause').onclick = (e) => {
+    paused = !paused;
+    e.target.textContent = paused ? 'Resume' : 'Pause';
+  };
+  document.getElementById('ov-again').onclick = reset;
+
+  cvs.addEventListener('click', (e) => {
+    const r = cvs.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (W / r.width);
+    const y = (e.clientY - r.top)  * (H / r.height);
+    if (tool === tools.ERASE) {
+      signs = signs.filter(s => Math.hypot(s.x - x, s.y - y) > 22);
+      return;
+    }
+    if (!tool) return;
+    // Don't place in spawn or off the map
+    if (y < CLIFF_Y + 20 || y > SPAWN.y - 10) return;
+    signs.push({ x, y, dir: tool === tools.LEFT ? 'left' : 'right' });
+  });
+
+  function reset() {
+    frame = 0;
+    spawnedCount = 0;
+    saved = 0;
+    dead = 0;
+    lemmings = [];
+    signs = [];
+    paused = false;
+    document.getElementById('pause').textContent = 'Pause';
+    els.overlay.classList.remove('show');
+    updateHud();
+  }
+
+  function spawn() {
+    const x = SPAWN.x0 + Math.random() * (SPAWN.x1 - SPAWN.x0);
+    lemmings.push({
+      x, y: SPAWN.y,
+      // heading: 'up' is default (article's "they walk straight up")
+      // dir vector
+      vx: 0, vy: -SPEED,
+      heading: 'up',
+      alive: true,
+      saved: false,
+      hue: 30 + Math.random() * 30,
+      bob: Math.random() * Math.PI * 2,
+      // remember last sign so we don't flicker
+      lastSign: null,
+    });
+    spawnedCount++;
+  }
+
+  function applySign(l, s) {
+    if (l.lastSign === s) return;
+    l.lastSign = s;
+    if (s.dir === 'left')  { l.vx = -SPEED; l.vy = 0; l.heading = 'left'; }
+    else                   { l.vx =  SPEED; l.vy = 0; l.heading = 'right'; }
+  }
+
+  function step() {
+    frame++;
+    if (spawnedCount < TOTAL && frame % SPAWN_EVERY === 0) spawn();
+
+    for (const l of lemmings) {
+      if (!l.alive || l.saved) continue;
+      l.bob += 0.25;
+
+      // sign collision
+      for (const s of signs) {
+        if (Math.hypot(s.x - l.x, s.y - l.y) < 16) {
+          applySign(l, s);
+          break;
+        }
+      }
+
+      l.x += l.vx;
+      l.y += l.vy;
+
+      // off sides — they just walk off
+      if (l.x < -10 || l.x > W + 10) { l.alive = false; dead++; continue; }
+
+      // hit top edge: portal or cliff
+      if (l.y <= CLIFF_Y) {
+        if (l.x >= PORTAL.x && l.x <= PORTAL.x + PORTAL.w) {
+          l.saved = true; saved++;
+        } else {
+          l.alive = false; dead++;
+        }
+      }
+    }
+
+    updateHud();
+
+    const done = spawnedCount >= TOTAL && lemmings.every(l => !l.alive || l.saved);
+    if (done) endRound();
+  }
+
+  function updateHud() {
+    els.saved.textContent = saved;
+    els.dead.textContent = dead;
+    els.spawned.textContent = spawnedCount;
+  }
+
+  function endRound() {
+    const pct = Math.round((saved / TOTAL) * 100);
+    let title, body;
+    if (pct === 100) {
+      title = "100%. mentor of the year.";
+      body  = "every lemming home. somewhere a substack writer is proud of you.";
+    } else if (pct >= 70) {
+      title = `${pct}% saved`;
+      body  = "directionally correct. some lemmings still ate cliff. trade-offs.";
+    } else if (pct >= 30) {
+      title = `${pct}% saved`;
+      body  = "an improvement over the default. half the population still on team 💀.";
+    } else {
+      title = `${pct}% saved`;
+      body  = "ain't no lemming got time to read all that. try simpler signs.";
+    }
+    els.ovTitle.textContent = title;
+    els.ovBody.textContent = body;
+    els.overlay.classList.add('show');
+  }
+
+  // ——————— rendering ———————
+  function draw() {
+    // background
+    ctx.fillStyle = '#11141c';
+    ctx.fillRect(0, 0, W, H);
+
+    // grass / ground texture
+    const grad = ctx.createLinearGradient(0, CLIFF_Y, 0, H);
+    grad.addColorStop(0, '#1b2a1f');
+    grad.addColorStop(1, '#14201a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, CLIFF_Y, W, H - CLIFF_Y);
+
+    // subtle dot pattern
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    for (let y = CLIFF_Y + 20; y < H; y += 24) {
+      for (let x = 12; x < W; x += 24) {
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+
+    // cliff band at top
+    ctx.fillStyle = '#3b1f25';
+    ctx.fillRect(0, 0, W, CLIFF_Y);
+    // jagged cliff edge
+    ctx.fillStyle = '#5a2a33';
+    ctx.beginPath();
+    ctx.moveTo(0, CLIFF_Y);
+    for (let x = 0; x <= W; x += 14) {
+      ctx.lineTo(x, CLIFF_Y - (Math.sin(x * 0.37) * 2 + 2));
+    }
+    ctx.lineTo(W, CLIFF_Y);
+    ctx.closePath();
+    ctx.fill();
+
+    // portal opening
+    ctx.fillStyle = '#0d1f15';
+    ctx.fillRect(PORTAL.x, 0, PORTAL.w, CLIFF_Y);
+    // portal glow
+    const pg = ctx.createRadialGradient(PORTAL.x + PORTAL.w/2, CLIFF_Y, 4, PORTAL.x + PORTAL.w/2, CLIFF_Y, 60);
+    pg.addColorStop(0, 'rgba(74, 222, 128, 0.55)');
+    pg.addColorStop(1, 'rgba(74, 222, 128, 0)');
+    ctx.fillStyle = pg;
+    ctx.fillRect(PORTAL.x - 30, 0, PORTAL.w + 60, 90);
+    // portal frame
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(PORTAL.x + 0.5, 0.5, PORTAL.w - 1, CLIFF_Y - 1);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '11px ui-sans-serif, system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('HOME', PORTAL.x + PORTAL.w/2, CLIFF_Y + 14);
+
+    // spawn line
+    ctx.strokeStyle = 'rgba(255, 210, 63, 0.25)';
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(SPAWN.x0, SPAWN.y + 8);
+    ctx.lineTo(SPAWN.x1, SPAWN.y + 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // signs
+    for (const s of signs) drawSign(s);
+
+    // lemmings
+    for (const l of lemmings) drawLemming(l);
+
+    // cliff label
+    ctx.fillStyle = 'rgba(248,113,113,0.75)';
+    ctx.font = 'bold 11px ui-sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('▲ CLIFF — do not step off', 12, 16);
+    ctx.textAlign = 'right';
+    ctx.fillText('CLIFF ▲', W - 12, 16);
+  }
+
+  function drawSign(s) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    // post
+    ctx.fillStyle = '#6b4a2a';
+    ctx.fillRect(-1.5, -2, 3, 18);
+    // board
+    ctx.fillStyle = '#ffd23f';
+    ctx.strokeStyle = '#b4901c';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(-18, -16, 36, 16, 3) : ctx.rect(-18, -16, 36, 16);
+    ctx.fill();
+    ctx.stroke();
+    // arrow
+    ctx.fillStyle = '#1a1d26';
+    ctx.beginPath();
+    if (s.dir === 'left') {
+      ctx.moveTo(-12, -8); ctx.lineTo(-4, -13); ctx.lineTo(-4, -10);
+      ctx.lineTo(12, -10); ctx.lineTo(12, -6); ctx.lineTo(-4, -6);
+      ctx.lineTo(-4, -3);
+    } else {
+      ctx.moveTo(12, -8); ctx.lineTo(4, -13); ctx.lineTo(4, -10);
+      ctx.lineTo(-12, -10); ctx.lineTo(-12, -6); ctx.lineTo(4, -6);
+      ctx.lineTo(4, -3);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLemming(l) {
+    if (!l.alive && !l.saved) return; // skip the dead
+    if (l.saved) return;              // they made it home
+    const wob = Math.sin(l.bob) * 1.2;
+    ctx.save();
+    ctx.translate(l.x, l.y + wob * 0.2);
+
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 6, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // body
+    ctx.fillStyle = `hsl(${l.hue}, 70%, 60%)`;
+    ctx.beginPath();
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // hair tuft
+    ctx.fillStyle = '#3a3a52';
+    ctx.beginPath();
+    ctx.arc(0, -5, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // eyes
+    ctx.fillStyle = '#1a1d26';
+    let ex = 0, ey = 0;
+    if (l.heading === 'left')  { ex = -1.5; }
+    if (l.heading === 'right') { ex =  1.5; }
+    if (l.heading === 'up')    { ey = -1; }
+    ctx.fillRect(-2.5 + ex, -1 + ey, 1.5, 1.5);
+    ctx.fillRect( 1.0 + ex, -1 + ey, 1.5, 1.5);
+    // mouth: smile
+    ctx.strokeStyle = '#1a1d26';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0 + ex, 1 + ey, 1.8, 0, Math.PI);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // splat for newly dead
+  const splats = [];
+  // patch: when a lemming dies, leave a splat
+  function killEffects() {
+    for (const l of lemmings) {
+      if (!l.alive && !l.saved && !l._splatted) {
+        l._splatted = true;
+        splats.push({ x: l.x, y: Math.max(l.y, CLIFF_Y + 2), age: 0 });
+      }
+    }
+  }
+  function drawSplats() {
+    for (const s of splats) {
+      s.age++;
+      const alpha = Math.max(0, 1 - s.age / 480);
+      ctx.fillStyle = `rgba(248, 113, 113, ${alpha * 0.85})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${alpha * 0.6})`;
+      ctx.font = '10px ui-sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('💀', s.x, s.y - 4);
+    }
+  }
+
+  // save sparkle
+  const sparkles = [];
+  function saveEffects() {
+    for (const l of lemmings) {
+      if (l.saved && !l._sparkled) {
+        l._sparkled = true;
+        sparkles.push({ x: l.x, y: CLIFF_Y, age: 0 });
+      }
+    }
+  }
+  function drawSparkles() {
+    for (const s of sparkles) {
+      s.age++;
+      const alpha = Math.max(0, 1 - s.age / 40);
+      ctx.fillStyle = `rgba(74, 222, 128, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y - s.age * 0.6, 4 - s.age * 0.05, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function loop() {
+    if (!paused) {
+      step();
+      killEffects();
+      saveEffects();
+    }
+    draw();
+    drawSplats();
+    drawSparkles();
+    requestAnimationFrame(loop);
+  }
+
+  // round-rect polyfill for older browsers
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y,     x + w, y + h, r);
+      this.arcTo(x + w, y + h, x,     y + h, r);
+      this.arcTo(x,     y + h, x,     y,     r);
+      this.arcTo(x,     y,     x + w, y,     r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  reset();
+  loop();
+})();
+</script>
+</body>
+</html>
